@@ -1,0 +1,119 @@
+import sys
+sys.path.insert(0, '.')
+
+from datasets import load_dataset
+from src.preprocessing.cleaner import clean_text
+from src.models.sentiment_classifier import classify_sentiment
+from src.prediction.frustration_detector import detect_frustration, FrustrationResult
+from src.prediction.churn_predictor import predict_churn, ChurnResult
+from src.models.sentiment_classifier import SentimentResult
+import pandas as pd
+import time
+import argparse
+
+
+def load_tweets_sample(lang: str = "es", n_samples: int =100):
+    """Load a sample of tweets from HuggingFace."""
+    if lang == "pt":
+        dataset_name = "eduagarcia/tweetsentbr_fewshot"
+        print(f"Loading {n_samples} Portuguese tweets from {dataset_name} (TweetSentBR)...")
+    else:
+        dataset_name = "pysentimiento/spanish-tweets"
+        print(f"Loading {n_samples} Spanish tweets from {dataset_name}...")
+    
+    dataset = load_dataset(dataset_name, split="train", streaming=True)
+    
+    tweets = []
+    for i, example in enumerate(dataset):
+        if i >= n_samples:
+            break
+        # Handle different field names across datasets
+        text = example.get("text") or example.get("sentence") or example.get("tweet") or ""
+        tweets.append({
+            "text": text,
+            "user_id": example.get("user_id", None),
+            "tweet_id": example.get("tweet_id") or example.get("id"),
+        })
+    
+    return tweets
+
+
+def process_tweets(tweets: list[dict], lang: str = "es") -> list[dict]:
+    """Process tweets through the full pipeline."""
+    results = []
+    
+    for i, tweet in enumerate(tweets):
+        text = tweet["text"]
+        
+        # Clean
+        cleaned = clean_text(text, lang=lang)
+        
+        # Sentiment
+        sentiment = classify_sentiment(cleaned, lang=lang)
+        
+        # Frustration
+        frustration = detect_frustration(cleaned, sentiment, lang=lang)
+        
+        results.append({
+            "tweet_id": tweet.get("tweet_id"),
+            "text_original": text,
+            "text_clean": cleaned,
+            "sentiment": sentiment.label,
+            "confidence": sentiment.confidence,
+            "frustrated": frustration.is_frustrated,
+            "frustration_intensity": frustration.intensity,
+            "lang": sentiment.lang,
+        })
+        
+        if (i + 1) % 10 == 0:
+            print(f"Processed {i + 1}/{len(tweets)} tweets...")
+    
+    return results
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Process tweets through sentiment pipeline")
+    parser.add_argument("--lang", choices=["es", "pt"], default="es", help="Language: es or pt")
+    parser.add_argument("--samples", type=int, default=100, help="Number of tweets to process")
+    args = parser.parse_args()
+    
+    # Load sample
+    tweets = load_tweets_sample(lang=args.lang, n_samples=args.samples)
+    print(f"Loaded {len(tweets)} tweets")
+    
+    # Process through pipeline
+    print("Processing through pipeline...")
+    start = time.time()
+    results = process_tweets(tweets, lang=args.lang)
+    elapsed = time.time() - start
+    print(f"Processed {len(results)} tweets in {elapsed:.2f}s ({elapsed/len(results):.2f}s per tweet)")
+    
+    # Convert to DataFrame
+    df = pd.DataFrame(results)
+    
+    # Summary stats
+    print("\n=== Summary ===")
+    print(f"Sentiment distribution:\n{df['sentiment'].value_counts()}")
+    print(f"\nFrustration rate: {df['frustrated'].mean()*100:.1f}%")
+    
+    # Predict churn for consecutive groups (simulating conversations)
+    print("\n=== Churn Prediction (simulated conversations) ===")
+    for i in range(0, len(results), 3):
+        window = results[i:i+3]
+        churn = predict_churn([
+            {"text": r["text_clean"], "sentiment": SentimentResult(r["sentiment"], r["confidence"], r["lang"]), 
+             "frustration": FrustrationResult(r["frustrated"], r["frustration_intensity"], [])}
+            for r in window
+        ])
+        if churn.risk in ["high", "medium"]:
+            print(f"  Conversation {i//3}: {churn.risk} risk - {churn.reason}")
+    
+    # Save to CSV for dashboard
+    output_file = f"data/{args.lang}_tweets_sample.csv"
+    df.to_csv(output_file, index=False)
+    print(f"\nResults saved to {output_file}")
+    print(f"Columns: {list(df.columns)}")
+
+
+if __name__ == "__main__":
+    main()

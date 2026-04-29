@@ -1,0 +1,39 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# PyTorch/HuggingFace cache
+.pytorch/
+.huggingface/
+*.pth
+*.ckpt
+
+# Data files
+data/
+*.csv
+*.sqlite
+*.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/

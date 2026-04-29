@@ -1,0 +1,7 @@
+transformers
+torch
+spacy
+streamlit
+pandas
+plotly
+tqdm

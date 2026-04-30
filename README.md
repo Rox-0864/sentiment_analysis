@@ -32,17 +32,17 @@ python -m spacy download pt_core_news_sm
 
 ## Uso
 
-### 1. Procesar datos reales de Twitter
+### 1. Procesar datos reales
 
 ```bash
-# Procesar tweets en Español (100 muestras)
-python3 process_tweets.py --lang es --samples 100
+# Procesar reviews en Español (100 muestras)
+python3 process_reviews.py --lang es --samples 100
 
-# Procesar tweets en Portugués (75 muestras)
-python3 process_tweets.py --lang pt --samples 75
+# Procesar reviews en Portugués (75 muestras)
+python3 process_reviews.py --lang pt --samples 75
 ```
 
-Los resultados se guardan en `data/es_tweets_sample.csv` y `data/pt_tweets_sample.csv`.
+Los resultados se guardan en `data/es_reviews_sample.csv` y `data/pt_reviews_sample.csv`.
 
 ### 2. Ejecutar el Dashboard
 
@@ -50,11 +50,11 @@ Los resultados se guardan en `data/es_tweets_sample.csv` y `data/pt_tweets_sampl
 streamlit run src/dashboard/app.py
 ```
 
-El dashboard carga automáticamente los CSVs generados y muestra:
-- Distribución de sentimiento por día
-- Proporción general de sentimiento
-- Detección de frustración
-- Desglose de riesgo de churn
+El dashboard carga automáticamente los datos de e-commerce y muestra:
+- Distribución de sentimiento por categoría
+- Distribución general de ratings
+- Relación entre sentimiento y rating
+- Reviews por fecha
 
 ### 3. Correr tests
 
@@ -67,15 +67,16 @@ python3 -m pytest tests/ -v
 ```
 sentiment_analysis/
 ├── requirements.txt              # Dependencias Python
-├── process_tweets.py           # Script para cargar y procesar tweets reales
+├── process_reviews.py           # Script para cargar y procesar reviews reales
 ├── data/                       # Datos procesados (CSVs)
-│   ├── spanish_tweets_sample.csv
-│   └── pt_tweets_sample.csv
+│   ├── ecommerce_reviews.csv  # Datos de muestra e-commerce
+│   ├── spanish_reviews_sample.csv
+│   └── portuguese_reviews_sample.csv
 ├── src/
 │   ├── preprocessing/
 │   │   └── cleaner.py         # Limpieza y normalización de texto
 │   ├── models/
-│   │   └── sentiment_classifier.py  # Clasificación con HuggingFace
+│   │   └── classifier.py      # Clasificación con HuggingFace
 │   ├── prediction/
 │   │   ├── frustration_detector.py  # Detección de frustración
 │   │   └── churn_predictor.py     # Predicción de churn
@@ -93,12 +94,12 @@ sentiment_analysis/
 
 ## Datasets
 
-- **Español**: [pysentimiento/spanish-tweets](https://huggingface.co/datasets/pysentimiento/spanish-tweets) (622M tweets)
-- **Portugués**: [TweetSentBR](https://github.com/brasileiras-nlp/tweetSentBR) vía [eduagarcia/tweetsentbr_fewshot](https://huggingface.co/datasets/eduagarcia/tweetsentbr_fewshot)
+- **Español**: [pysentimiento/spanish-reviews](https://huggingface.co/datasets/pysentimiento/spanish-tweets) (622M reviews)
+- **Portugués**: [ReviewSentBR](https://github.com/brasileiras-nlp/reviewSentBR) vía [eduagarcia/reviewsentbr_fewshot](https://huggingface.co/datasets/eduagarcia/tweetsentbr_fewshot)
 
 ## Rendimiento
 
-- Procesamiento: ~0.15s por tweet (CPU)
+- Procesamiento: ~0.15s por review (CPU)
 - Precisión de sentimiento: >95% (validado con tests)
 - Detección de frustración: 21-25% en datasets reales
 - 24 tests unitarios y E2E pasando ✅

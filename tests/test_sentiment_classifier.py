@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from src.models.sentiment_classifier import SentimentResult, classify_sentiment
+from src.models.classifier import SentimentResult, classify_sentiment
 
 
 def test_sentiment_result_dataclass():
@@ -10,7 +10,7 @@ def test_sentiment_result_dataclass():
     assert result.lang == "es"
 
 
-@patch("src.models.sentiment_classifier._get_model")
+@patch("src.models.classifier._get_model")
 def test_classify_sentiment_es_negative(mock_get_model):
     mock_classifier = MagicMock()
     mock_classifier.return_value = [{"label": "NEG", "score": 0.97}]
@@ -22,7 +22,7 @@ def test_classify_sentiment_es_negative(mock_get_model):
     assert result.lang == "es"
 
 
-@patch("src.models.sentiment_classifier._get_model")
+@patch("src.models.classifier._get_model")
 def test_classify_sentiment_pt_positive(mock_get_model):
     mock_classifier = MagicMock()
     mock_classifier.return_value = [{"label": "POS", "score": 0.99}]
@@ -34,7 +34,7 @@ def test_classify_sentiment_pt_positive(mock_get_model):
     assert result.lang == "pt"
 
 
-@patch("src.models.sentiment_classifier._get_model")
+@patch("src.models.classifier._get_model")
 def test_classify_sentiment_neutral(mock_get_model):
     mock_classifier = MagicMock()
     mock_classifier.return_value = [{"label": "NEU", "score": 0.60}]
@@ -46,6 +46,6 @@ def test_classify_sentiment_neutral(mock_get_model):
 
 
 def test_classify_sentiment_caches_model():
-    from src.models.sentiment_classifier import _model_cache
+    from src.models.classifier import _model_cache
     _model_cache.clear()
     assert len(_model_cache) == 0

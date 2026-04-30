@@ -1,7 +1,7 @@
 import sys
 import pytest
 from datetime import datetime, timedelta
-from src.models.sentiment_classifier import classify_sentiment
+from src.models.classifier import classify_sentiment
 from src.prediction.frustration_detector import detect_frustration
 from src.prediction.churn_predictor import predict_churn
 

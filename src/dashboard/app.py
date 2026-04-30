@@ -5,9 +5,9 @@ from datetime import datetime, timedelta
 import os
 
 
-st.set_page_config(page_title="ConversaAI Sentiment Dashboard", layout="wide")
+st.set_page_config(page_title="Sentiment Analysis Dashboard", layout="wide")
 
-st.title("📊 ConversaAI Sentiment Analysis Dashboard")
+st.title("📊 E-Commerce Reviews Dashboard")
 
 # Sidebar filters
 with st.sidebar:
@@ -19,73 +19,65 @@ with st.sidebar:
         max_value=datetime.now()
     )
     
-    language = st.selectbox(
-        "Filter by Language",
-        options=["All", "es", "pt"],
+    category = st.selectbox(
+        "Filter by Category",
+        options=["All", "Electronics", "Clothing", "Home & Kitchen", "Sports", "Office"],
         index=0
     )
+    
+    min_rating = st.slider("Minimum Rating", 1, 5, 1)
 
 st.header("Insights")
 
 data = None
 
-# Load real data from CSVs
-csv_files = {
-    "es": "data/spanish_tweets_sample.csv",
-    "pt": "data/pt_tweets_sample.csv"
-}
+# Load e-commerce reviews data
+csv_path = "data/ecommerce_reviews.csv"
 
-dfs = []
-for lang, csv_path in csv_files.items():
-    if os.path.exists(csv_path):
-        df = pd.read_csv(csv_path)
-        df["date"] = datetime.now().date()  # No date in CSV, use today
-        dfs.append(df)
-    else:
-        st.warning(f"File not found: {csv_path}")
-
-if dfs:
-    data = pd.concat(dfs, ignore_index=True)
+if os.path.exists(csv_path):
+    data = pd.read_csv(csv_path)
+    data["date"] = pd.to_datetime(data["date"])
     
-    if language != "All":
-        data = data[data["lang"] == language]
+    # Apply filters
+    if category != "All":
+        data = data[data["category"] == category]
+    data = data[data["rating"] >= min_rating]
     
     # Show data source info
-    st.info(f"Loaded {len(data)} messages from pipeline CSVs")
+    st.info(f"Loaded {len(data)} reviews from e-commerce data")
 else:
-    st.warning("No data available. Run `python3 process_tweets.py --lang es/pt` to generate data.")
+    st.warning(f"File not found: {csv_path}")
 
 if data is None or len(data) == 0:
     st.warning("No data available for the selected filters.")
 else:
-    st.subheader("Daily Sentiment Distribution")
-    daily_sentiment = data.groupby(["date", "sentiment"]).size().reset_index(name="count")
-    fig_daily = px.bar(
-        daily_sentiment, x="date", y="count", color="sentiment",
-        title="Sentiment Count by Day", labels={"count": "Messages", "date": "Date"}
+    st.subheader("Sentiment Distribution by Category")
+    category_sentiment = data.groupby(["category", "sentiment"]).size().reset_index(name="count")
+    fig_category = px.bar(
+        category_sentiment, x="category", y="count", color="sentiment",
+        title="Sentiment Count by Product Category", 
+        labels={"count": "Reviews", "category": "Product Category"}
     )
-    st.plotly_chart(fig_daily, use_container_width=True)
+    st.plotly_chart(fig_category, width='stretch')
     
-    st.subheader("Overall Sentiment Distribution")
-    sentiment_counts = data["sentiment"].value_counts().reset_index()
-    sentiment_counts.columns = ["sentiment", "count"]
-    fig_pie = px.pie(sentiment_counts, values="count", names="sentiment", title="Sentiment Proportion")
-    st.plotly_chart(fig_pie, use_container_width=True)
+    st.subheader("Overall Rating Distribution")
+    rating_counts = data["rating"].value_counts().reset_index()
+    rating_counts.columns = ["rating", "count"]
+    fig_rating = px.pie(rating_counts, values="count", names="rating", title="Rating Distribution")
+    st.plotly_chart(fig_rating, width='stretch')
     
-    st.subheader("Frustration Detection")
-    frustration_counts = data["frustrated"].value_counts().reset_index()
-    frustration_counts.columns = ["frustrated", "count"]
-    fig_frust = px.bar(frustration_counts, x="frustrated", y="count", title="Frustration Count")
-    st.plotly_chart(fig_frust, use_container_width=True)
-    
-    st.subheader("Churn Risk Breakdown")
-    # Simulate churn for visualization
-    data["churn_risk"] = data.apply(
-        lambda row: "high" if row["frustrated"] and row["sentiment"] == "negative" 
-        else ("medium" if row["sentiment"] == "negative" else "low"),
-        axis=1
+    st.subheader("Sentiment vs Rating")
+    fig_scatter = px.scatter(
+        data, x="rating", y="sentiment", color="category",
+        title="Sentiment vs Rating by Category",
+        labels={"rating": "Rating (1-5)", "sentiment": "Sentiment"}
     )
-    churn_counts = data["churn_risk"].value_counts().reset_index()
-    churn_counts.columns = ["risk", "count"]
-    fig_churn = px.pie(churn_counts, values="count", names="risk", title="Churn Risk Distribution")
-    st.plotly_chart(fig_churn, use_container_width=True)
+    st.plotly_chart(fig_scatter, width='stretch')
+    
+    st.subheader("Reviews by Date")
+    daily_reviews = data.groupby(["date", "sentiment"]).size().reset_index(name="count")
+    fig_daily = px.line(
+        daily_reviews, x="date", y="count", color="sentiment",
+        title="Daily Review Count", labels={"count": "Reviews", "date": "Date"}
+    )
+    st.plotly_chart(fig_daily, width='stretch')

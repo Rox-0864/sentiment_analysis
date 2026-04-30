@@ -22,7 +22,7 @@ def test_frustration_neutral_text():
 
 
 def test_frustration_with_negative_sentiment():
-    from src.models.sentiment_classifier import SentimentResult
+    from src.models.classifier import SentimentResult
     
     sentiment = SentimentResult(label="negative", confidence=0.90, lang="es")
     result = detect_frustration("esto no me gusta nada", sentiment)
@@ -31,7 +31,7 @@ def test_frustration_with_negative_sentiment():
 
 
 def test_frustration_high_confidence_negative():
-    from src.models.sentiment_classifier import SentimentResult
+    from src.models.classifier import SentimentResult
     
     sentiment = SentimentResult(label="negative", confidence=0.95, lang="es")
     result = detect_frustration("no se qué pensar", sentiment)

@@ -1,6 +1,6 @@
 import pytest
 from src.prediction.churn_predictor import ChurnResult, predict_churn
-from src.models.sentiment_classifier import SentimentResult
+from src.models.classifier import SentimentResult
 from src.prediction.frustration_detector import FrustrationResult
 
 

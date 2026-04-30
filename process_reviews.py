@@ -3,10 +3,10 @@ sys.path.insert(0, '.')
 
 from datasets import load_dataset
 from src.preprocessing.cleaner import clean_text
-from src.models.sentiment_classifier import classify_sentiment
+from src.models.classifier import classify_sentiment
 from src.prediction.frustration_detector import detect_frustration, FrustrationResult
 from src.prediction.churn_predictor import predict_churn, ChurnResult
-from src.models.sentiment_classifier import SentimentResult
+from src.models.classifier import SentimentResult
 import pandas as pd
 import time
 import argparse
@@ -15,48 +15,48 @@ import argparse
 # Dataset mapping for datasets that ACTUALLY WORK
 DATASET_CONFIG = {
     "es": {
-        "name": "pysentimiento/spanish-tweets",
+        "name": "pysentimiento/spanish-reviews",
         "field_text": "text",
-        "field_id": "tweet_id",
-        "description": "Spanish tweets (622M total, 100 sample)",
+        "field_id": "review_id",
+        "description": "Spanish reviews (622M total, 100 sample)",
     },
     "pt": {
-        "name": "eduagarcia/tweetsentbr_fewshot",
+        "name": "eduagarcia/reviewsentbr_fewshot",
         "field_text": "sentence",  # Note: different field name!
         "field_id": "id",
-        "description": "TweetSentBR Portuguese (75 samples in few-shot version)",
+        "description": "Portuguese reviews (75 samples in few-shot version)",
     }
 }
 
 
-def load_tweets_sample(lang: str = "es", n_samples: int =100):
-    """Load tweets from working HuggingFace datasets."""
+def load_reviews_sample(lang: str = "es", n_samples: int = 100):
+    """Load reviews from working HuggingFace datasets."""
     config = DATASET_CONFIG[lang]
-    print(f"Loading {n_samples} {lang} tweets from {config['name']}...")
+    print(f"Loading {n_samples} {lang} reviews from {config['name']}...")
     print(f"Note: {config['description']}")
     
     dataset = load_dataset(config["name"], split="train", streaming=True)
     
-    tweets = []
+    reviews = []
     for i, example in enumerate(dataset):
         if i >= n_samples:
             break
         text = example.get(config["field_text"], "")
-        tweets.append({
+        reviews.append({
             "text": text,
-            "tweet_id": example.get(config["field_id"], None),
+            "review_id": example.get(config["field_id"], None),
         })
     
-    print(f"Loaded {len(tweets)} tweets")
-    return tweets
+    print(f"Loaded {len(reviews)} reviews")
+    return reviews
 
 
-def process_tweets(tweets: list[dict], lang: str = "es") -> list[dict]:
-    """Process tweets through the full pipeline."""
+def process_reviews(reviews: list[dict], lang: str = "es") -> list[dict]:
+    """Process reviews through the full pipeline."""
     results = []
     
-    for i, tweet in enumerate(tweets):
-        text = tweet["text"]
+    for i, review in enumerate(reviews):
+        text = review["text"]
         
         # Clean
         cleaned = clean_text(text, lang=lang)
@@ -68,7 +68,7 @@ def process_tweets(tweets: list[dict], lang: str = "es") -> list[dict]:
         frustration = detect_frustration(cleaned, sentiment, lang=lang)
         
         results.append({
-            "tweet_id": tweet.get("tweet_id"),
+            "review_id": review.get("review_id"),
             "text_original": text,
             "text_clean": cleaned,
             "sentiment": sentiment.label,
@@ -79,26 +79,26 @@ def process_tweets(tweets: list[dict], lang: str = "es") -> list[dict]:
         })
         
         if (i + 1) % 10 == 0:
-            print(f"Processed {i + 1}/{len(tweets)} tweets...")
+            print(f"Processed {i + 1}/{len(reviews)} reviews...")
     
     return results
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Process tweets through sentiment pipeline")
+    parser = argparse.ArgumentParser(description="Process reviews through sentiment pipeline")
     parser.add_argument("--lang", choices=["es", "pt"], default="es", help="Language: es or pt")
-    parser.add_argument("--samples", type=int, default=100, help="Number of tweets to process")
+    parser.add_argument("--samples", type=int, default=100, help="Number of reviews to process")
     args = parser.parse_args()
     
     # Load sample
-    tweets = load_tweets_sample(lang=args.lang, n_samples=args.samples)
+    reviews = load_reviews_sample(lang=args.lang, n_samples=args.samples)
     
     # Process through pipeline
     print("Processing through pipeline...")
     start = time.time()
-    results = process_tweets(tweets, lang=args.lang)
+    results = process_reviews(reviews, lang=args.lang)
     elapsed = time.time() - start
-    print(f"Processed {len(results)} tweets in {elapsed:.2f}s ({elapsed/len(results):.2f}s per tweet)")
+    print(f"Processed {len(results)} reviews in {elapsed:.2f}s ({elapsed/len(results):.2f}s per review)")
     
     # Convert to DataFrame
     df = pd.DataFrame(results)
@@ -121,7 +121,7 @@ def main():
             print(f"  Conversation {i//3}: {churn.risk} risk - {churn.reason}")
     
     # Save to CSV for dashboard
-    output_file = f"data/{args.lang}_tweets_sample.csv"
+    output_file = f"data/{args.lang}_reviews_sample.csv"
     df.to_csv(output_file, index=False)
     print(f"\nResults saved to {output_file}")
     print(f"Columns: {list(df.columns)}")

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Optional
-from src.models.sentiment_classifier import SentimentResult
+from src.models.classifier import SentimentResult
 
 
 @dataclass

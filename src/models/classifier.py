@@ -56,7 +56,7 @@ def _get_model(lang: str):
 
 def _load_training_data(lang: str):
     """Load training data from CSV or use seed data."""
-    csv_path = f"data/{lang}_tweets_sample.csv"
+    csv_path = f"data/{lang}_reviews_sample.csv"
     
     if os.path.exists(csv_path):
         df = pd.read_csv(csv_path)

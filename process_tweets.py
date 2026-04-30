@@ -12,29 +12,42 @@ import time
 import argparse
 
 
+# Dataset mapping for datasets that ACTUALLY WORK
+DATASET_CONFIG = {
+    "es": {
+        "name": "pysentimiento/spanish-tweets",
+        "field_text": "text",
+        "field_id": "tweet_id",
+        "description": "Spanish tweets (622M total, 100 sample)",
+    },
+    "pt": {
+        "name": "eduagarcia/tweetsentbr_fewshot",
+        "field_text": "sentence",  # Note: different field name!
+        "field_id": "id",
+        "description": "TweetSentBR Portuguese (75 samples in few-shot version)",
+    }
+}
+
+
 def load_tweets_sample(lang: str = "es", n_samples: int =100):
-    """Load a sample of tweets from HuggingFace."""
-    if lang == "pt":
-        dataset_name = "eduagarcia/tweetsentbr_fewshot"
-        print(f"Loading {n_samples} Portuguese tweets from {dataset_name} (TweetSentBR)...")
-    else:
-        dataset_name = "pysentimiento/spanish-tweets"
-        print(f"Loading {n_samples} Spanish tweets from {dataset_name}...")
+    """Load tweets from working HuggingFace datasets."""
+    config = DATASET_CONFIG[lang]
+    print(f"Loading {n_samples} {lang} tweets from {config['name']}...")
+    print(f"Note: {config['description']}")
     
-    dataset = load_dataset(dataset_name, split="train", streaming=True)
+    dataset = load_dataset(config["name"], split="train", streaming=True)
     
     tweets = []
     for i, example in enumerate(dataset):
         if i >= n_samples:
             break
-        # Handle different field names across datasets
-        text = example.get("text") or example.get("sentence") or example.get("tweet") or ""
+        text = example.get(config["field_text"], "")
         tweets.append({
             "text": text,
-            "user_id": example.get("user_id", None),
-            "tweet_id": example.get("tweet_id") or example.get("id"),
+            "tweet_id": example.get(config["field_id"], None),
         })
     
+    print(f"Loaded {len(tweets)} tweets")
     return tweets
 
 
@@ -79,7 +92,6 @@ def main():
     
     # Load sample
     tweets = load_tweets_sample(lang=args.lang, n_samples=args.samples)
-    print(f"Loaded {len(tweets)} tweets")
     
     # Process through pipeline
     print("Processing through pipeline...")

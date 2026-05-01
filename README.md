@@ -42,7 +42,7 @@ python3 process_reviews.py --lang es --samples 100
 python3 process_reviews.py --lang pt --samples 75
 ```
 
-Los resultados se guardan en `data/es_reviews_sample.csv` y `data/pt_reviews_sample.csv`.
+Los resultados se guardan en `data/es_tweets_sample.csv` y `data/pt_tweets_sample.csv` (archivos legacy).
 
 ### 2. Ejecutar el Dashboard
 

@@ -34,7 +34,7 @@ with st.sidebar:
     )
 
 # Create tabs for different views
-tab1, tab2, tab3 = st.tabs(["📈 Overview", "🆚 Model Comparison", "📊 BERT Details"])
+tab1, tab2, tab3 = st.tabs(["📈 TF-IDF Details", "🆚 Model Comparison", "📊 BERT Details"])
 
 # Load data for all tabs
 data = None

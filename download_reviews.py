@@ -30,32 +30,31 @@ def download_spanish_reviews():
 
 def download_portuguese_reviews():
     """Download Portuguese e-commerce reviews from Hugging Face."""
-    print("Downloading Portuguese e-commerce reviews (20k samples)...")
+    print("Downloading Portuguese e-commerce reviews (80k samples)...")
     try:
-        # Try IberaSoft (20k reviews, verified)
-        dataset = load_dataset("IberaSoft/ecommerce-reviews-sentiment", split="train")
+        # Try Buscapé reviews (80k samples)
+        dataset = load_dataset("evelinamorim/buscape-reviews", split="train")
         df = dataset.to_pandas()
-
+        
         # Keep only relevant columns
-        df = df[["text", "label"]]
-        df.columns = ["text", "label_num"]
-
-        # Convert labels (0=negative, 1=neutral, 2=positive)
-        df["sentiment"] = df["label_num"].map({
-            0: "negative",
-            1: "neutral",
-            2: "positive"
-        })
-
+        df = df[["review_text", "rating"]]
+        df.columns = ["text", "rating"]
+        
+        # Convert rating to sentiment (filter out 0 rating)
+        df = df[df["rating"] > 0]
+        df["sentiment"] = df["rating"].apply(
+            lambda x: "negative" if x <= 2 else ("neutral" if x == 3 else "positive")
+        )
+        
         # Filter only positive/negative for binary classification
         df = df[df["sentiment"].isin(["positive", "negative"])]
-
+        
         # Save as CSV
         output_path = "data/portuguese_ecommerce_reviews.csv"
         df[["text", "sentiment"]].to_csv(output_path, index=False)
         print(f"✅ Saved {len(df)} Portuguese reviews to {output_path}")
         return output_path
-
+        
     except Exception as e:
         print(f"❌ Error downloading Portuguese reviews: {e}")
         return None

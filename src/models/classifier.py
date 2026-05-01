@@ -83,11 +83,13 @@ def _load_training_data(lang: str):
     # Determine which files to load based on language
     if lang == "es":
         files = [
-            ("data/ecommerce_reviews.csv", "rating"),  # Use rating as ground truth
+            ("data/spanish_amazon_reviews.csv", "sentiment"),  # 200k Amazon reviews
+            ("data/ecommerce_reviews.csv", "rating"),  # Local e-commerce reviews
             ("data/es_reviews_sample.csv", "sentiment"),  # Tweet sentiment
         ]
     else:  # pt
         files = [
+            ("data/portuguese_ecommerce_reviews.csv", "sentiment"),  # 73k PT reviews
             ("data/pt_reviews_sample.csv", "sentiment"),  # Tweet sentiment
         ]
 
@@ -104,7 +106,6 @@ def _load_training_data(lang: str):
                 # Filter only positive/negative for binary classification
                 df = df[df["true_sentiment"].isin(["positive", "negative"])]
                 if len(df) > 0:
-                    # Handle NaN in review_text
                     df = df.dropna(subset=["review_text"])
                     texts.extend(df["review_text"].tolist())
                     labels.extend(df["true_sentiment"].tolist())
@@ -112,7 +113,7 @@ def _load_training_data(lang: str):
             else:  # sentiment column
                 df = df[df["sentiment"].isin(["positive", "negative"])]
                 if len(df) > 0:
-                    text_col = "text_clean" if "text_clean" in df.columns else "review_text"
+                    text_col = "text" if "text" in df.columns else ("review_text" if "review_text" in df.columns else "text_clean")
                     df = df.dropna(subset=[text_col])
                     texts.extend(df[text_col].tolist())
                     labels.extend(df["sentiment"].tolist())

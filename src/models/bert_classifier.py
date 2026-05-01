@@ -15,18 +15,19 @@ class SentimentResult:
 # Model configurations
 MODEL_CONFIG = {
     "es": {
-        "model_name": "pysentimiento/robertuito-sentiment-analysis",
-        "display_name": "RoBERTuito"
+        "model_name": "nlptown/bert-base-multilingual-uncased-sentiment",
+        "display_name": "NLPtown-BERT (ES Reviews)",
+        "type": "nlptown"  # Returns star ratings 1-5
     },
     "pt": {
-        "model_name": "pysentimiento/bertimbau-sentiment",
-        "display_name": "BERTimbau"
+        "model_name": "ramonmedeiro1/bertimbau-products-reviews-pt-br",
+        "display_name": "BERTimbau E-commerce (PT)",
+        "type": "standard"  # Returns POS/NEG/NEU
     }
 }
 
 # Cache for loaded models
 _pipelines = {}
-
 
 def _get_pipeline(lang: str):
     """Load or get cached transformer pipeline."""
@@ -52,9 +53,19 @@ def _get_pipeline(lang: str):
     return pipe
 
 
+def _map_nlptown_to_sentiment(star_rating: int) -> str:
+    """Map NLPtown star rating (1-5) to sentiment label."""
+    if star_rating <= 2:
+        return "negative"
+    elif star_rating == 3:
+        return "neutral"
+    else:
+        return "positive"
+
+
 def classify_with_bert(text: str, lang: Optional[str] = None) -> SentimentResult:
     """
-    Classify text sentiment using BERT models (RoBERTuito for ES, BERTimbau for PT).
+    Classify text sentiment using BERT models (NLPtown for ES, BERTimbau for PT).
     
     Args:
         text: Text to classify
@@ -73,19 +84,27 @@ def classify_with_bert(text: str, lang: Optional[str] = None) -> SentimentResult
     
     pipe = _get_pipeline(lang)
     result = pipe(text)[0]
+    config = MODEL_CONFIG[lang]
     
     # Map model output to standard labels
-    label_map = {
-        "POS": "positive",
-        "NEG": "negative",
-        "NEU": "neutral"
-    }
+    if config["type"] == "nlptown":
+        # NLPtown returns star ratings 1-5 as labels like "LABEL_4"
+        label_str = result["label"]
+        star_rating = int(label_str.split("_")[1])  # Extract number from "LABEL_X"
+        label = _map_nlptown_to_sentiment(star_rating)
+    else:
+        # Standard models return POS/NEG/NEU
+        label_map = {
+            "POS": "positive",
+            "NEG": "negative",
+            "NEU": "neutral",
+            "LABEL_1": "negative",
+            "LABEL_2": "positive"
+        }
+        raw_label = result["label"]
+        label = label_map.get(raw_label, raw_label.lower())
     
-    raw_label = result["label"]
-    label = label_map.get(raw_label, raw_label.lower())
     confidence = float(result["score"])
-    
-    config = MODEL_CONFIG[lang]
     
     return SentimentResult(
         label=label,

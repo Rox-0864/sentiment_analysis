@@ -6,7 +6,7 @@ Pipeline de análisis de sentimientos e intención para ConversaAI que procesa m
 
 - 🇪🇸 **Español** y 🇧🇷 **Portugués** soportados
 - 🧹 Preprocesamiento de texto con spaCy (limpieza, normalización)
-- 🤖 Clasificación de sentimiento con modelos fine-tuned (RoBERTuito, BERTweet-PT)
+- 🤖 Clasificación de sentimiento con modelos fine-tuned (RoBERTuito para ES, BERTimbau para PT)
 - 😤 Detección de frustración explícita basada en patrones y señales
 - 📉 Predicción de churn (abandono) con ventana deslizante
 - 📊 Dashboard interactivo con Streamlit + Plotly
@@ -70,8 +70,8 @@ sentiment_analysis/
 ├── process_reviews.py           # Script para cargar y procesar reviews reales
 ├── data/                       # Datos procesados (CSVs)
 │   ├── ecommerce_reviews.csv  # Datos de muestra e-commerce
-│   ├── spanish_reviews_sample.csv
-│   └── portuguese_reviews_sample.csv
+│   ├── es_tweets_sample.csv   # Muestra español (legacy)
+│   └── pt_tweets_sample.csv   # Muestra portugués (legacy)
 ├── src/
 │   ├── preprocessing/
 │   │   └── cleaner.py         # Limpieza y normalización de texto
@@ -82,7 +82,7 @@ sentiment_analysis/
 │   │   └── churn_predictor.py     # Predicción de churn
 │   └── dashboard/
 │       └── app.py              # Dashboard Streamlit
-└── tests/                      # Tests unitarios y E2E (24 tests)
+└── tests/                      # Tests unitarios y E2E
 ```
 
 ## Modelos Utilizados
@@ -90,12 +90,12 @@ sentiment_analysis/
 | Idioma | Modelo | Fuente |
 |--------|--------|---------|
 | Español | `pysentimiento/robertuito-sentiment-analysis` | HuggingFace |
-| Portugués | `pysentimiento/bertweet-pt-sentiment` | HuggingFace |
+| Portugués | `pysentimiento/bertimbau-sentiment` | HuggingFace |
 
 ## Datasets
 
-- **Español**: [pysentimiento/spanish-reviews](https://huggingface.co/datasets/pysentimiento/spanish-tweets) (622M reviews)
-- **Portugués**: [ReviewSentBR](https://github.com/brasileiras-nlp/reviewSentBR) vía [eduagarcia/reviewsentbr_fewshot](https://huggingface.co/datasets/eduagarcia/tweetsentbr_fewshot)
+- **Español**: [CMU-MOSEAS](https://huggingface.co/datasets/CMU/MOSEAS) - Opiniones en español de dominios variados
+- **Portugués**: [ReviewSentBR](https://github.com/brasileiras-nlp/reviewSentBR) - Reviews de e-commerce en portugués
 
 ## Rendimiento
 

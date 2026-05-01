@@ -42,7 +42,7 @@ python3 process_reviews.py --lang es --samples 100
 python3 process_reviews.py --lang pt --samples 75
 ```
 
-Los resultados se guardan en `data/es_tweets_sample.csv` y `data/pt_tweets_sample.csv` (archivos legacy).
+Los resultados se guardan en `data/es_reviews_sample.csv` y `data/pt_reviews_sample.csv`.
 
 ### 2. Ejecutar el Dashboard
 
@@ -70,8 +70,8 @@ sentiment_analysis/
 ├── process_reviews.py           # Script para cargar y procesar reviews reales
 ├── data/                       # Datos procesados (CSVs)
 │   ├── ecommerce_reviews.csv  # Datos de muestra e-commerce
-│   ├── es_tweets_sample.csv   # Muestra español (legacy)
-│   └── pt_tweets_sample.csv   # Muestra portugués (legacy)
+│   ├── es_reviews_sample.csv   # Muestra español
+│   └── pt_reviews_sample.csv   # Muestra portugués
 ├── src/
 │   ├── preprocessing/
 │   │   └── cleaner.py         # Limpieza y normalización de texto

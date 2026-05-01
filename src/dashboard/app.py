@@ -34,7 +34,7 @@ with st.sidebar:
     )
 
 # Create tabs for different views
-tab1, tab2, tab3 = st.tabs(["📈 TF-IDF Details", "🆚 Model Comparison", "📊 BERT Details"])
+tab1, tab2, tab3, tab4 = st.tabs(["📈 TF-IDF Details", "🆚 Model Comparison", "📊 BERT Details", "⚡ Performance"])
 
 # Load data for all tabs
 data = None
@@ -161,3 +161,70 @@ with tab3:
         st.plotly_chart(fig_bert_cat, width='stretch')
     else:
         st.warning("BERT data not found. Run 'python compare_models.py' first.")
+
+# Tab 4: Performance Metrics
+with tab4:
+    if comparison_data is not None:
+        st.info(f"Performance comparison for {len(comparison_data)} reviews")
+        
+        # Accuracy metrics
+        if "tfidf_accuracy" in comparison_data.columns:
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.subheader("🎯 Accuracy (vs Rating)")
+                tfidf_acc = comparison_data["tfidf_accuracy"].iloc[0]
+                bert_acc = comparison_data["bert_accuracy"].iloc[0]
+                
+                metrics_df = pd.DataFrame({
+                    "Model": ["TF-IDF + LogReg", "BERT (RoBERTuito)"],
+                    "Accuracy": [tfidf_acc, bert_acc]
+                })
+                
+                fig_acc = px.bar(
+                    metrics_df, x="Model", y="Accuracy",
+                    title="Model Accuracy Comparison",
+                    text="Accuracy",
+                    color="Model",
+                    labels={"Accuracy": "Accuracy (%)"}
+                )
+                fig_acc.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
+                st.plotly_chart(fig_acc, width='stretch')
+                
+                st.metric("TF-IDF Accuracy", f"{tfidf_acc:.1f}%")
+                st.metric("BERT Accuracy", f"{bert_acc:.1f}%")
+            
+            with col2:
+                st.subheader("⚡ Processing Time")
+                tfidf_time = comparison_data["tfidf_time_ms"].iloc[0]
+                bert_time = comparison_data["bert_time_ms"].iloc[0]
+                
+                time_df = pd.DataFrame({
+                    "Model": ["TF-IDF + LogReg", "BERT (RoBERTuito)"],
+                    "Time (ms)": [tfidf_time, bert_time]
+                })
+                
+                fig_time = px.bar(
+                    time_df, x="Model", y="Time (ms)",
+                    title="Processing Time per Review",
+                    text="Time (ms)",
+                    color="Model",
+                    labels={"Time (ms)": "Time (milliseconds)"}
+                )
+                fig_time.update_traces(texttemplate='%{text:.1f}ms', textposition='outside')
+                st.plotly_chart(fig_time, width='stretch')
+                
+                st.metric("TF-IDF Time", f"{tfidf_time:.1f} ms/review")
+                st.metric("BERT Time", f"{bert_time:.1f} ms/review")
+                
+                speedup = bert_time / tfidf_time
+                st.warning(f"BERT is {speedup:.0f}x slower than TF-IDF")
+        
+        # Agreement rate
+        if "both_agree" in comparison_data.columns:
+            st.subheader("🤝 Model Agreement")
+            agreement_rate = comparison_data["both_agree"].mean() * 100
+            st.progress(agreement_rate / 100)
+            st.metric("Agreement Rate", f"{agreement_rate:.1f}%")
+    else:
+        st.warning("Performance data not found. Run 'python compare_models.py' first.")

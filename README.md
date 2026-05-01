@@ -110,10 +110,4 @@ sentiment_analysis/
 - 4GB RAM (para modelos transformers)
 - Conexión a internet (descarga de modelos la primera vez)
 
-## Licencia
 
-MIT
-
----
-
-**Desarrollado con Spec-Driven Development (SDD)** - Propuesta → Specs → Diseño → Tareas → Implementación → Verificación → Archivo

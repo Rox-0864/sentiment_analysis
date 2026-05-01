@@ -132,7 +132,7 @@ with tab2:
         # Detailed comparison table
         st.subheader("Detailed Comparison")
         display_cols = ["product_name", "rating", "review_text", "tfidf_sentiment", "bert_sentiment", "both_agree"]
-        st.dataframe(comparison_data[display_cols], use_container_width=True)
+        st.dataframe(comparison_data[display_cols], width='stretch')
     else:
         st.warning("Comparison data not found. Run 'python compare_models.py' first.")
 

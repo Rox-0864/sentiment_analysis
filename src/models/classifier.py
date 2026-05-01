@@ -80,28 +80,42 @@ def _load_training_data(lang: str):
     texts = []
     labels = []
 
-    # Try to load from ecommerce reviews first (better data)
-    csv_path = "data/ecommerce_reviews.csv"
-    if os.path.exists(csv_path):
-        df = pd.read_csv(csv_path)
-        # Use rating as ground truth
-        df["true_sentiment"] = df["rating"].apply(
-            lambda x: "negative" if x <= 2 else ("neutral" if x == 3 else "positive")
-        )
-        # Filter only positive/negative for binary classification
-        df = df[df["true_sentiment"].isin(["positive", "negative"])]
-        if len(df) > 0:
-            texts.extend(df["review_text"].tolist())
-            labels.extend(df["true_sentiment"].tolist())
+    # Determine which files to load based on language
+    if lang == "es":
+        files = [
+            ("data/ecommerce_reviews.csv", "rating"),  # Use rating as ground truth
+            ("data/es_reviews_sample.csv", "sentiment"),  # Tweet sentiment
+        ]
+    else:  # pt
+        files = [
+            ("data/pt_reviews_sample.csv", "sentiment"),  # Tweet sentiment
+        ]
 
-    # Also load from sample files
-    sample_path = f"data/{lang}_reviews_sample.csv"
-    if os.path.exists(sample_path) and len(texts) < 10:
-        df = pd.read_csv(sample_path)
-        df = df[df["sentiment"].isin(["positive", "negative"])]
-        if len(df) > 0:
-            texts.extend(df["text_clean"].tolist())
-            labels.extend(df["sentiment"].tolist())
+    for file_path, label_source in files:
+        if os.path.exists(file_path):
+            df = pd.read_csv(file_path)
+            df = df.dropna(subset=["sentiment"] if label_source == "sentiment" else ["rating"])
+
+            if label_source == "rating":
+                # Convert rating to sentiment
+                df["true_sentiment"] = df["rating"].apply(
+                    lambda x: "negative" if x <= 2 else ("neutral" if x == 3 else "positive")
+                )
+                # Filter only positive/negative for binary classification
+                df = df[df["true_sentiment"].isin(["positive", "negative"])]
+                if len(df) > 0:
+                    # Handle NaN in review_text
+                    df = df.dropna(subset=["review_text"])
+                    texts.extend(df["review_text"].tolist())
+                    labels.extend(df["true_sentiment"].tolist())
+
+            else:  # sentiment column
+                df = df[df["sentiment"].isin(["positive", "negative"])]
+                if len(df) > 0:
+                    text_col = "text_clean" if "text_clean" in df.columns else "review_text"
+                    df = df.dropna(subset=[text_col])
+                    texts.extend(df[text_col].tolist())
+                    labels.extend(df["sentiment"].tolist())
 
     # Fallback to seed data if still empty
     if len(texts) == 0:
